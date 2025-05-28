@@ -11,8 +11,22 @@ import re
 from typing import List, Dict
 from langchain_anthropic import ChatAnthropic
 from langchain.schema import HumanMessage
+from dotenv import load_dotenv
 
-from variables import ANTHROPIC_API_KEY
+# Load environment variables
+script_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(script_dir, 'environment.env')
+print(f"Looking for environment file at: {env_path}")
+print(f"Environment file exists: {os.path.exists(env_path)}")
+load_dotenv(env_path)
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
+print(f"Loaded API key: {'Yes' if ANTHROPIC_API_KEY else 'No'}")
+
+if not ANTHROPIC_API_KEY:
+    raise ValueError(f"ANTHROPIC_API_KEY not found in environment variables. Please set it in {env_path}")
+
+# Clean up debug prints after first successful load
+print("Environment loaded successfully!")
 
 app = Flask(__name__)
 
@@ -20,10 +34,13 @@ app = Flask(__name__)
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 # Read system prompt and questions once at startup
-with open("../biographer/system prompt.txt", "r") as f:
+system_prompt_path = os.path.join(script_dir, "biographer", "system prompt.txt")
+questions_csv_path = os.path.join(script_dir, "biographer", "ask_these.csv")
+
+with open(system_prompt_path, "r") as f:
     system_prompt = f.read()
 
-questions_df = pd.read_csv("../biographer/ask_these.csv")
+questions_df = pd.read_csv(questions_csv_path)
 questions_list = questions_df.to_dict('records')
 questions_str = "\n".join([f"Category: {q['Category']}, Field: {q['Field']}, Question: {q['Question']}" for q in questions_list])
 system_prompt = system_prompt.replace("{{QUESTIONS_LIST}}", questions_str)
@@ -448,7 +465,8 @@ def process_conclusions():
 def assess_answer_quality():
     """Assess answer quality using the AnswerQualityAssessor"""
     data = request.get_json()
-    questions_file = data.get('questions_file', '../biographer/ask_these.csv')
+    default_questions_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "biographer", "ask_these.csv")
+    questions_file = data.get('questions_file', default_questions_path)
     answers_file = data.get('answers_file')
     output_file = data.get('output_file')
     
