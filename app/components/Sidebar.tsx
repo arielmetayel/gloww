@@ -28,6 +28,10 @@ const navigationData: NavItem[] = [
         href: '/integrate'
       },
       {
+        title: 'Guided Memory Journey',
+        href: '/guided-memory'
+      },
+      {
         title: 'Scrape',
         children: [
           { title: 'Social media', href: '/scrape/social-media' },
@@ -141,6 +145,9 @@ function NavItemComponent({ item, level }: NavItemComponentProps) {
     return null
   }
 
+  // Check if this item should show "coming soon" tag
+  const shouldShowComingSoon = item.title !== 'Collect' && item.title !== 'Integrate' && item.title !== 'Guided Memory Journey' && item.href
+
   const content = (
     <div
       className={`flex items-center justify-between py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer transition-colors ${
@@ -148,7 +155,14 @@ function NavItemComponent({ item, level }: NavItemComponentProps) {
       }`}
       onClick={toggleOpen}
     >
-      <span className="flex-1">{item.title}</span>
+      <div className="flex items-center flex-1">
+        <span className="flex-1">{item.title}</span>
+        {shouldShowComingSoon && (
+          <span className="ml-2 px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
+            Coming Soon
+          </span>
+        )}
+      </div>
       {getIcon()}
     </div>
   )
